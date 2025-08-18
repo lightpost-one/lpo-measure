@@ -10,8 +10,12 @@ litellm.api_base = "https://app.lyngby.lightpost.one/"
 litellm.api_key = "9e571bf73904"
 
 
-def judge_instruction_achieved(instruction: str, final_state: dict[str, Any]) -> dict[str, Any]:
+def judge_instruction_achieved(instruction: str, final_state: dict[str, Any] | None) -> dict[str, Any]:
     """Use LLM to evaluate how well the instruction was achieved based on final state."""
+    # Handle case where run_instruction failed and returned None
+    if final_state is None:
+        return {"score": 0, "reason": "Instruction execution failed - no final state available"}
+    
     system_prompt = """You are an expert evaluator that judges how well user instructions were completed on a canvas interface.
 
 Your task is to analyze the final state of a canvas and determine how successfully a user's instruction was fulfilled.

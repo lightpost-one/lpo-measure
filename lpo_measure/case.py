@@ -1,9 +1,10 @@
 import hashlib
-import json
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Any
+
+import orjson
 
 
 @dataclass
@@ -20,36 +21,65 @@ class Case:
         instruction_hash = hashlib.sha256(instruction.encode()).hexdigest()[:16]
         return cls(hash=instruction_hash, date_created=datetime.now().isoformat(), instruction=instruction)
 
-    def to_dict(self) -> dict[str, Any]:
-        """Convert case to dictionary."""
-        return asdict(self)
-
-    def to_json(self) -> str:
-        """Convert case to JSON string."""
-        return json.dumps(self.to_dict(), indent=2)
-
-    @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "Case":
-        """Create case from dictionary."""
-        return cls(**data)
-
-    @classmethod
-    def from_json(cls, json_str: str) -> "Case":
-        """Create case from JSON string."""
-        data = json.loads(json_str)
-        return cls.from_dict(data)
 
     def save_to_file(self, cases_dir: Path) -> Path:
-        """Save case to JSON file in cases directory."""
+        """Save case to JSON file in cases directory if it doesn't already exist."""
         cases_dir.mkdir(exist_ok=True)
         filename = f"{self.hash}.json"
         filepath = cases_dir / filename
-        with open(filepath, "w") as f:
-            f.write(self.to_json())
+
+        if not filepath.exists():
+            with open(filepath, "wb") as f:
+                f.write(orjson.dumps(asdict(self), option=orjson.OPT_INDENT_2))
+
         return filepath
 
     @classmethod
     def load_from_file(cls, filepath: Path) -> "Case":
         """Load case from JSON file."""
-        with open(filepath, "r") as f:
-            return cls.from_json(f.read())
+        with open(filepath, "rb") as f:
+            data = orjson.loads(f.read())
+            return cls(**data)
+
+
+@dataclass
+class CaseResult:
+    """Represents the result of running a case measurement."""
+
+    case_hash: str
+    instruction: str
+    initial_state: dict[str, Any]
+    final_state: dict[str, Any] | None
+    success: bool
+    date_measured: str
+
+    @classmethod
+    def create(
+        cls, case: Case, initial_state: dict[str, Any], final_state: dict[str, Any] | None, success: bool
+    ) -> "CaseResult":
+        """Create a new case result with current timestamp."""
+        return cls(
+            case_hash=case.hash,
+            instruction=case.instruction,
+            initial_state=initial_state,
+            final_state=final_state,
+            success=success,
+            date_measured=datetime.now().isoformat(),
+        )
+
+
+    def save_to_file(self, measurements_dir: Path) -> Path:
+        """Save case result to JSON file in measurements directory."""
+        measurements_dir.mkdir(exist_ok=True)
+        filename = f"{self.case_hash}_{self.date_measured.replace(':', '-').replace('.', '-')}.json"
+        filepath = measurements_dir / filename
+        with open(filepath, "wb") as f:
+            f.write(orjson.dumps(asdict(self), option=orjson.OPT_INDENT_2))
+        return filepath
+
+    @classmethod
+    def load_from_file(cls, filepath: Path) -> "CaseResult":
+        """Load case result from JSON file."""
+        with open(filepath, "rb") as f:
+            data = orjson.loads(f.read())
+            return cls(**data)
