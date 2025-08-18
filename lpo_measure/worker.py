@@ -22,6 +22,6 @@ def run_case_and_save(args: tuple[Path, Path]) -> CaseMeasurement:
 
     score_color = colors.get(measurement.result.score, "")
     print(
-        f"✨ Instruction '{case.instruction}' scored {bold}{score_color}{measurement.result.score}{reset_color} because '{measurement.result.reason}'\n"
+        f"✨ Instruction '{bold}{case.instruction}{reset_color}' scored {bold}{score_color}{measurement.result.score}{reset_color} because '{measurement.result.reason}'\n"
     )
     return measurement
