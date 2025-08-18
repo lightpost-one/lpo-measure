@@ -1,0 +1,1 @@
+- [ ] Pricing info. A measurement report should also contain information about the total cost of the measurement, using the litellm api.
