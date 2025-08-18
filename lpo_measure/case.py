@@ -75,7 +75,7 @@ class CaseMeasurement:
     def save_to_file(self, measurements_dir: Path) -> Path:
         """Save case result to JSON file in measurements directory."""
         measurements_dir.mkdir(exist_ok=True)
-        filename = f"{self.case.hash}_{self.date_measured}.json"
+        filename = f"{self.case.hash}.json"
         filepath = measurements_dir / filename
         with open(filepath, "wb") as f:
             f.write(orjson.dumps(asdict(self), option=orjson.OPT_INDENT_2))

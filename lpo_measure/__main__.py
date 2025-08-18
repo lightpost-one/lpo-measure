@@ -1,4 +1,5 @@
 import argparse
+from datetime import datetime
 from pathlib import Path
 
 from tqdm import tqdm
@@ -40,7 +41,9 @@ def add_cases_from_file(filepath: str) -> None:
 def run_all_cases() -> None:
     """Run measurements against all cases in the cases folder."""
     cases_path = Path("cases")
-    measurements_path = Path("measurements")
+    now = datetime.now()
+    measurements_dir_name = f"measurements_{now.strftime('%Y-%m-%d_%H-%M-%S')}"
+    measurements_path = Path(measurements_dir_name)
 
     if not cases_path.exists():
         print("No cases directory found")
