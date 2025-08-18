@@ -1,0 +1,9 @@
+{
+  "hash": "7a35b3cfadf0816c",
+  "date_created": "2025-08-18T16:39:45.903550",
+  "instruction": "Express 2*exp(x)-y as a graph of function nodes. You should use two function nodes. Evaluate the graph with inputs x=0 and y=1, and write the output to a text node.",
+  "initial_state": {
+    "nodes": [],
+    "edges": []
+  }
+}
