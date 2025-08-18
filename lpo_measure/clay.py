@@ -17,7 +17,6 @@ if not ELECTRON_TERMINAL_PATH:
 def run_case(case: Case) -> CaseMeasurement:
     """Run instruction on canvas and return a CaseResult with the measurement."""
     # Start with clear state
-    initial_state = {"nodes": [], "edges": []}
 
     try:
         start_time = time.time()
@@ -26,7 +25,7 @@ def run_case(case: Case) -> CaseMeasurement:
                 "node",
                 f"{ELECTRON_TERMINAL_PATH}/dist-headless/run-headless.mjs",
                 "--state",
-                orjson.dumps(initial_state).decode(),
+                orjson.dumps(case.initial_state).decode(),
                 "--prompt",
                 case.instruction,
             ],
@@ -44,4 +43,4 @@ def run_case(case: Case) -> CaseMeasurement:
 
     judge_result = judge_instruction_achieved(case.instruction, final_state)
 
-    return CaseMeasurement.create(case, initial_state, final_state, judge_result, runtime)
+    return CaseMeasurement.create(case, final_state, judge_result, runtime)

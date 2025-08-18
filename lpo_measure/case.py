@@ -14,12 +14,23 @@ class Case:
     hash: str
     date_created: str
     instruction: str
+    initial_state: dict[str, Any]
 
     @classmethod
-    def create(cls, instruction: str) -> "Case":
+    def create(cls, instruction: str, initial_state: dict[str, Any] | None = None) -> "Case":
         """Create a new case with hash from instruction and current timestamp."""
-        instruction_hash = hashlib.sha256(instruction.encode()).hexdigest()[:16]
-        return cls(hash=instruction_hash, date_created=datetime.now().isoformat(), instruction=instruction)
+        if initial_state is None:
+            initial_state = {"nodes": [], "edges": []}
+
+        to_hash = instruction.encode() + orjson.dumps(initial_state, option=orjson.OPT_SORT_KEYS)
+
+        instruction_hash = hashlib.sha256(to_hash).hexdigest()[:16]
+        return cls(
+            hash=instruction_hash,
+            date_created=datetime.now().isoformat(),
+            instruction=instruction,
+            initial_state=initial_state,
+        )
 
     def save_to_file(self, cases_dir: Path) -> Path:
         """Save case to JSON file in cases directory if it doesn't already exist."""
@@ -54,7 +65,6 @@ class CaseMeasurement:
     """Everything about a full case measurement."""
 
     case: Case
-    initial_state: dict[str, Any]
     final_state: dict[str, Any] | None
     result: CaseResult
     runtime: float
@@ -64,7 +74,6 @@ class CaseMeasurement:
     def create(
         cls,
         case: Case,
-        initial_state: dict[str, Any],
         final_state: dict[str, Any] | None,
         result: CaseResult,
         runtime: float,
@@ -72,7 +81,6 @@ class CaseMeasurement:
         """Create a new case result with current timestamp."""
         return cls(
             case=case,
-            initial_state=initial_state,
             final_state=final_state,
             result=result,
             runtime=runtime,
