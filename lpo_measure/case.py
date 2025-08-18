@@ -57,11 +57,17 @@ class CaseMeasurement:
     initial_state: dict[str, Any]
     final_state: dict[str, Any] | None
     result: CaseResult
+    runtime: float
     date_measured: str
 
     @classmethod
     def create(
-        cls, case: Case, initial_state: dict[str, Any], final_state: dict[str, Any] | None, result: CaseResult
+        cls,
+        case: Case,
+        initial_state: dict[str, Any],
+        final_state: dict[str, Any] | None,
+        result: CaseResult,
+        runtime: float,
     ) -> "CaseMeasurement":
         """Create a new case result with current timestamp."""
         return cls(
@@ -69,6 +75,7 @@ class CaseMeasurement:
             initial_state=initial_state,
             final_state=final_state,
             result=result,
+            runtime=runtime,
             date_measured=datetime.now().isoformat(),
         )
 

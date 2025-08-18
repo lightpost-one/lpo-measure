@@ -1,4 +1,4 @@
-- [ ] Every output case measurement should also contain the runtime for that case.
+- [x] Every output case measurement should also contain the runtime for that case.
 - [ ] Cases need an initial state field. Adding cases should continue to work as it does now, where passing only an instruction and omitting an initial state sets the initial state to be empty in the Case object (and json).
 - [x] Output report. Each measurement run should create a new output folder measurements_$datetime.
 - [x] Besides all the individual measurements, that folder should have a report.json with aggregate information about total runtime, and an aggregate score that is the sum of all individual measurement scores divided by the number of cases.

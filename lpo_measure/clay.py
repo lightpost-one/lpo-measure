@@ -1,5 +1,6 @@
 import os
 import subprocess
+import time
 
 import orjson
 from dotenv import load_dotenv
@@ -19,6 +20,7 @@ def run_case(case: Case) -> CaseMeasurement:
     initial_state = {"nodes": [], "edges": []}
 
     try:
+        start_time = time.time()
         result = subprocess.run(
             [
                 "node",
@@ -32,11 +34,14 @@ def run_case(case: Case) -> CaseMeasurement:
             text=True,
             cwd=ELECTRON_TERMINAL_PATH,
         )
+        end_time = time.time()
+        runtime = end_time - start_time
 
         final_state = orjson.loads(result.stdout)
     except Exception:
         final_state = None
+        runtime = 0.0
 
     judge_result = judge_instruction_achieved(case.instruction, final_state)
 
-    return CaseMeasurement.create(case, initial_state, final_state, judge_result)
+    return CaseMeasurement.create(case, initial_state, final_state, judge_result, runtime)
