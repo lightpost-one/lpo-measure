@@ -4,7 +4,7 @@ import subprocess
 import orjson
 from dotenv import load_dotenv
 
-from .case import Case, CaseResult
+from .case import Case, CaseMeasurement
 from .judge import judge_instruction_achieved
 
 load_dotenv()
@@ -13,7 +13,7 @@ if not ELECTRON_TERMINAL_PATH:
     raise ValueError("ELECTRON_TERMINAL_PATH environment variable not set")
 
 
-def run_instruction(case: Case) -> CaseResult:
+def run_case(case: Case) -> CaseMeasurement:
     """Run instruction on canvas and return a CaseResult with the measurement."""
     # Start with clear state
     initial_state = {"nodes": [], "edges": []}
@@ -37,13 +37,6 @@ def run_instruction(case: Case) -> CaseResult:
     except Exception:
         final_state = None
 
-    # Judge the result
     judge_result = judge_instruction_achieved(case.instruction, final_state)
-    success = judge_result.get("score", 0) > 0
 
-    return CaseResult.create(
-        case=case,
-        initial_state=initial_state,
-        final_state=final_state,
-        success=success,
-    )
+    return CaseMeasurement.create(case, initial_state, final_state, judge_result)

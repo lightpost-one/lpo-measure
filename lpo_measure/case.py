@@ -9,7 +9,7 @@ import orjson
 
 @dataclass
 class Case:
-    """Represents a test case with instruction and metadata."""
+    """A Case is a user instruction on top of an initial state."""
 
     hash: str
     date_created: str
@@ -20,7 +20,6 @@ class Case:
         """Create a new case with hash from instruction and current timestamp."""
         instruction_hash = hashlib.sha256(instruction.encode()).hexdigest()[:16]
         return cls(hash=instruction_hash, date_created=datetime.now().isoformat(), instruction=instruction)
-
 
     def save_to_file(self, cases_dir: Path) -> Path:
         """Save case to JSON file in cases directory if it doesn't already exist."""
@@ -44,41 +43,46 @@ class Case:
 
 @dataclass
 class CaseResult:
-    """Represents the result of running a case measurement."""
+    """A CaseResult is a score and reason behind the score."""
 
-    case_hash: str
-    instruction: str
+    score: int
+    reason: str
+
+
+@dataclass
+class CaseMeasurement:
+    """Everything about a full case measurement."""
+
+    case: Case
     initial_state: dict[str, Any]
     final_state: dict[str, Any] | None
-    success: bool
+    result: CaseResult
     date_measured: str
 
     @classmethod
     def create(
-        cls, case: Case, initial_state: dict[str, Any], final_state: dict[str, Any] | None, success: bool
-    ) -> "CaseResult":
+        cls, case: Case, initial_state: dict[str, Any], final_state: dict[str, Any] | None, result: CaseResult
+    ) -> "CaseMeasurement":
         """Create a new case result with current timestamp."""
         return cls(
-            case_hash=case.hash,
-            instruction=case.instruction,
+            case=case,
             initial_state=initial_state,
             final_state=final_state,
-            success=success,
+            result=result,
             date_measured=datetime.now().isoformat(),
         )
-
 
     def save_to_file(self, measurements_dir: Path) -> Path:
         """Save case result to JSON file in measurements directory."""
         measurements_dir.mkdir(exist_ok=True)
-        filename = f"{self.case_hash}_{self.date_measured.replace(':', '-').replace('.', '-')}.json"
+        filename = f"{self.case.hash}_{self.date_measured}.json"
         filepath = measurements_dir / filename
         with open(filepath, "wb") as f:
             f.write(orjson.dumps(asdict(self), option=orjson.OPT_INDENT_2))
         return filepath
 
     @classmethod
-    def load_from_file(cls, filepath: Path) -> "CaseResult":
+    def load_from_file(cls, filepath: Path) -> "CaseMeasurement":
         """Load case result from JSON file."""
         with open(filepath, "rb") as f:
             data = orjson.loads(f.read())

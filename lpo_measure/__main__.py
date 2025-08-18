@@ -3,7 +3,7 @@ from pathlib import Path
 
 from tqdm import tqdm
 
-from lpo_measure.clay import run_instruction
+from lpo_measure.clay import run_case
 
 from .case import Case
 
@@ -57,11 +57,17 @@ def run_all_cases() -> None:
 
     for case_file in tqdm(case_files, desc="Processing cases"):
         case = Case.load_from_file(case_file)
-        case_result = run_instruction(case)
-        case_result.save_to_file(measurements_path)
+        measurement = run_case(case)
+        measurement.save_to_file(measurements_path)
+        # Color mapping for scores
+        colors = {0: "\033[91m", 1: "\033[93m", 2: "\033[33m", 3: "\033[92m"}  # red, orange, yellow, green
+        reset_color = "\033[0m"
+        bold = "\033[1m"
 
-        score = "PASS" if case_result.success else "FAIL"
-        print(f"{score}: {case.instruction}")
+        score_color = colors.get(measurement.result.score, "")
+        print(
+            f"✨ Instruction '{case.instruction}' scored {bold}{score_color}{measurement.result.score}{reset_color} because '{measurement.result.reason}'\n"
+        )
 
 
 if __name__ == "__main__":
@@ -82,8 +88,4 @@ if __name__ == "__main__":
     elif args.mode == "run":
         run_all_cases()
     else:
-        # Default behavior for backwards compatibility
-        instruction = "Function node to add two numbers"
-        case = Case.create(instruction)
-        result = run_instruction(case)
-        print(f"Success: {result.success}, Instruction: {result.instruction}")
+        raise Exception("Unreachable code.")
