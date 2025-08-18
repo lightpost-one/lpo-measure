@@ -1,7 +1,9 @@
 import argparse
+import time
 from datetime import datetime
 from pathlib import Path
 
+import orjson
 from tqdm import tqdm
 
 from lpo_measure.clay import run_case
@@ -50,18 +52,23 @@ def run_all_cases() -> None:
         return
 
     case_files = list(cases_path.glob("*.json"))
+    num_cases = len(case_files)
 
     if not case_files:
         print("No cases found")
         return
 
     measurements_path.mkdir(exist_ok=True)
-    print(f"Running {len(case_files)} cases...")
+    print(f"Running {num_cases} cases...")
+
+    total_score = 0
+    start_time = time.time()
 
     for case_file in tqdm(case_files, desc="Processing cases"):
         case = Case.load_from_file(case_file)
         measurement = run_case(case)
         measurement.save_to_file(measurements_path)
+        total_score += measurement.result.score
         # Color mapping for scores
         colors = {0: "\033[91m", 1: "\033[93m", 2: "\033[33m", 3: "\033[92m"}  # red, orange, yellow, green
         reset_color = "\033[0m"
@@ -71,6 +78,23 @@ def run_all_cases() -> None:
         print(
             f"✨ Instruction '{case.instruction}' scored {bold}{score_color}{measurement.result.score}{reset_color} because '{measurement.result.reason}'\n"
         )
+
+    end_time = time.time()
+    total_runtime = end_time - start_time
+    aggregate_score = total_score / num_cases if num_cases > 0 else 0
+    aggregate_score /= 3.0
+
+    report = {
+        "total_runtime": total_runtime,
+        "aggregate_score": aggregate_score,
+        "num_cases": num_cases,
+    }
+
+    report_path = measurements_path / "report.json"
+    with open(report_path, "wb") as f:
+        f.write(orjson.dumps(report, option=orjson.OPT_INDENT_2))
+
+    print(f"Measurement run complete. Report saved to {report_path}")
 
 
 if __name__ == "__main__":
