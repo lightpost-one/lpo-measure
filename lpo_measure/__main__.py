@@ -1,14 +1,17 @@
 import argparse
 import time
 from datetime import datetime
+from multiprocessing import Pool
 from pathlib import Path
 
 import orjson
 from tqdm import tqdm
 
-from lpo_measure.clay import run_case
+from lpo_measure.worker import run_case_and_save
 
 from .case import Case
+
+N_WORKERS = 3
 
 
 def add_cases_from_file(filepath: str) -> None:
@@ -55,25 +58,19 @@ def run_all_cases() -> None:
         return
 
     measurements_path.mkdir(exist_ok=True)
-    print(f"Running {num_cases} cases...")
+    print(f"Running {num_cases} cases with {N_WORKERS} workers...")
 
     total_score = 0
     start_time = time.time()
 
-    for case_file in tqdm(case_files, desc="Processing cases"):
-        case = Case.load_from_file(case_file)
-        measurement = run_case(case)
-        measurement.save_to_file(measurements_path)
-        total_score += measurement.result.score
-        # Color mapping for scores
-        colors = {0: "\033[91m", 1: "\033[93m", 2: "\033[33m", 3: "\033[92m"}  # red, orange, yellow, green
-        reset_color = "\033[0m"
-        bold = "\033[1m"
-
-        score_color = colors.get(measurement.result.score, "")
-        print(
-            f"✨ Instruction '{case.instruction}' scored {bold}{score_color}{measurement.result.score}{reset_color} because '{measurement.result.reason}'\n"
-        )
+    with Pool(N_WORKERS) as pool:
+        tasks = [(case_file, measurements_path) for case_file in case_files]
+        for measurement in tqdm(
+            pool.imap(run_case_and_save, tasks),
+            total=num_cases,
+            desc="Processing cases",
+        ):
+            total_score += measurement.result.score
 
     end_time = time.time()
     total_runtime = end_time - start_time
