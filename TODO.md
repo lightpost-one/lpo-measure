@@ -1,6 +1,3 @@
-- [x] Every output case measurement should also contain the runtime for that case.
-- [x] Cases need an initial state field. Adding cases should continue to work as it does now, where passing only an instruction and omitting an initial state sets the initial state to be empty in the Case object (and json).
-- [x] Output report. Each measurement run should create a new output folder measurements_$datetime.
-- [x] Besides all the individual measurements, that folder should have a report.json with aggregate information about total runtime, and an aggregate score that is the sum of all individual measurement scores divided by the number of cases.
 - [ ] Add multiprocessing. We should run N cases in parallel. hardcode N=3 as a global var
+- [ ] There is a bug when adding cases. Even new cases report that the file already exists. Verify and fix.
 - [ ] Pricing info. A measurement report should also contain information about the total cost of the measurement, using the litellm api.
