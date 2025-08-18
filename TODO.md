@@ -1,3 +1,3 @@
 - [ ] Add multiprocessing. We should run N cases in parallel. hardcode N=3 as a global var
-- [ ] There is a bug when adding cases. Even new cases report that the file already exists. Verify and fix.
+- [x] There is a bug when adding cases. Even new cases report that the file already exists. Verify and fix.
 - [ ] Pricing info. A measurement report should also contain information about the total cost of the measurement, using the litellm api.

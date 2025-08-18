@@ -32,7 +32,7 @@ class Case:
             initial_state=initial_state,
         )
 
-    def save_to_file(self, cases_dir: Path) -> Path:
+    def save_to_file(self, cases_dir: Path) -> tuple[Path, bool]:
         """Save case to JSON file in cases directory if it doesn't already exist."""
         cases_dir.mkdir(exist_ok=True)
         filename = f"{self.hash}.json"
@@ -41,8 +41,9 @@ class Case:
         if not filepath.exists():
             with open(filepath, "wb") as f:
                 f.write(orjson.dumps(asdict(self), option=orjson.OPT_INDENT_2))
+            return filepath, True
 
-        return filepath
+        return filepath, False
 
     @classmethod
     def load_from_file(cls, filepath: Path) -> "Case":

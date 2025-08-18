@@ -29,15 +29,11 @@ def add_cases_from_file(filepath: str) -> None:
 
     for instruction in instructions:
         case = Case.create(instruction)
-        case_file_path = case.save_to_file(cases_path)
-        if case_file_path.exists() and case_file_path.stat().st_size > 0:
-            existing_case = Case.load_from_file(case_file_path)
-            if existing_case.instruction == instruction:
-                print(f"Case already exists: {case.hash} - {instruction}")
-            else:
-                print(f"Created case: {case.hash} - {instruction}")
-        else:
+        _, created = case.save_to_file(cases_path)
+        if created:
             print(f"Created case: {case.hash} - {instruction}")
+        else:
+            print(f"Case already exists: {case.hash} - {instruction}")
 
 
 def run_all_cases() -> None:
