@@ -7,7 +7,10 @@
     ```
     ELECTRON_TERMINAL_PATH=/path/to/your/electron-terminal
     ```
-3.  Ready. First use will set up the venv.
+3.  **Set up environment**:
+    ```bash
+    make venv
+    ```
 
 ## Usage
 
