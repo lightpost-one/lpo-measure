@@ -2,4 +2,4 @@
 
 run:
 	@echo "Running LPO Measure..."
-	@.venv/bin/python lpo_measure.py
+	@uv run lpo_measure.py
