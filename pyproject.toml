@@ -9,6 +9,7 @@ dependencies = [
     "orjson>=3.11.2",
     "pandas>=2.3.1",
     "python-dotenv>=1.1.1",
+    "tqdm>=4.67.1",
 ]
 
 [dependency-groups]

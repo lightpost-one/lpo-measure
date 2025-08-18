@@ -575,6 +575,7 @@ dependencies = [
     { name = "orjson" },
     { name = "pandas" },
     { name = "python-dotenv" },
+    { name = "tqdm" },
 ]
 
 [package.dev-dependencies]
@@ -590,6 +591,7 @@ requires-dist = [
     { name = "orjson", specifier = ">=3.11.2" },
     { name = "pandas", specifier = ">=2.3.1" },
     { name = "python-dotenv", specifier = ">=1.1.1" },
+    { name = "tqdm", specifier = ">=4.67.1" },
 ]
 
 [package.metadata.requires-dev]

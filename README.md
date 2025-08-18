@@ -14,8 +14,20 @@
 
 ## Usage
 
+### Running measurements
+
 ```bash
 make run
 ```
 
-This will call the headless node script and print the JSON output.
+This runs measurements against all cases in the `cases/` directory with progress reporting.
+
+### Adding test cases
+
+Create a plaintext file with instructions (one per line), then:
+
+```bash
+uv run -m lpo_measure add instructions.txt
+```
+
+This creates JSON case files in the `cases/` directory, with filenames based on instruction hashes.

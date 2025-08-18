@@ -6,5 +6,5 @@ venv:
 	@uv sync --dev
 
 run:
-	@echo "Running LPO Measure..."
-	@uv run -m lpo_measure
+	@echo "Running all cases..."
+	@uv run -m lpo_measure run
