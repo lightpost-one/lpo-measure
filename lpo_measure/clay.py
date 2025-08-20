@@ -1,5 +1,6 @@
 import os
 import subprocess
+import tempfile
 import time
 
 import orjson
@@ -9,9 +10,9 @@ from .case import Case, CaseMeasurement
 from .judge import judge_instruction_achieved
 
 load_dotenv()
-ELECTRON_TERMINAL_PATH = os.getenv("ELECTRON_TERMINAL_PATH")
-if not ELECTRON_TERMINAL_PATH:
-    raise ValueError("ELECTRON_TERMINAL_PATH environment variable not set")
+CLAY_CLI_PATH = os.getenv("CLAY_CLI_PATH")
+if not CLAY_CLI_PATH:
+    raise ValueError("CLAY_CLI_PATH environment variable not set")
 
 
 def run_case(case: Case) -> CaseMeasurement:
@@ -19,25 +20,39 @@ def run_case(case: Case) -> CaseMeasurement:
     # Start with clear state
 
     try:
-        start_time = time.time()
-        result = subprocess.run(
-            [
-                "node",
-                f"{ELECTRON_TERMINAL_PATH}/dist-headless/run-headless.mjs",
-                "--state",
-                orjson.dumps(case.initial_state).decode(),
-                "--prompt",
-                case.instruction,
-            ],
-            capture_output=True,
-            text=True,
-            cwd=ELECTRON_TERMINAL_PATH,
-        )
-        end_time = time.time()
-        clay_runtime = end_time - start_time
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".json"
+        ) as state_file, tempfile.NamedTemporaryFile(
+            mode="r", suffix=".json"
+        ) as output_file:
+            state_file.write(orjson.dumps(case.initial_state).decode())
+            state_file.flush()
 
-        final_state = orjson.loads(result.stdout)
-    except Exception:
+            start_time = time.time()
+            result = subprocess.run(
+                [
+                    "node",
+                    f"{CLAY_CLI_PATH}",
+                    "--state-file",
+                    state_file.name,
+                    "--prompt",
+                    case.instruction,
+                    "--output",
+                    output_file.name,
+                ],
+                capture_output=True,
+                text=True,
+            )
+            end_time = time.time()
+            clay_runtime = end_time - start_time
+            result.check_returncode()
+
+            output = output_file.read()
+            if not output:
+                final_state = None
+            else:
+                final_state = orjson.loads(output)
+    except (Exception, subprocess.CalledProcessError):
         final_state = None
         clay_runtime = 0.0
 
@@ -46,4 +61,6 @@ def run_case(case: Case) -> CaseMeasurement:
     end_time = time.time()
     judge_runtime = end_time - start_time
 
-    return CaseMeasurement.create(case, final_state, judge_result, clay_runtime, judge_runtime)
+    return CaseMeasurement.create(
+        case, final_state, judge_result, clay_runtime, judge_runtime
+    )
