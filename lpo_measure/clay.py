@@ -34,13 +34,16 @@ def run_case(case: Case) -> CaseMeasurement:
             cwd=ELECTRON_TERMINAL_PATH,
         )
         end_time = time.time()
-        runtime = end_time - start_time
+        clay_runtime = end_time - start_time
 
         final_state = orjson.loads(result.stdout)
     except Exception:
         final_state = None
-        runtime = 0.0
+        clay_runtime = 0.0
 
+    start_time = time.time()
     judge_result = judge_instruction_achieved(case.instruction, final_state)
+    end_time = time.time()
+    judge_runtime = end_time - start_time
 
-    return CaseMeasurement.create(case, final_state, judge_result, runtime)
+    return CaseMeasurement.create(case, final_state, judge_result, clay_runtime, judge_runtime)

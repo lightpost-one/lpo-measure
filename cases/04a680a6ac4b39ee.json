@@ -1,9 +1,0 @@
-{
-  "hash": "04a680a6ac4b39ee",
-  "date_created": "2025-08-18T16:34:03.805608",
-  "instruction": "Function node to add two numbers",
-  "initial_state": {
-    "nodes": [],
-    "edges": []
-  }
-}

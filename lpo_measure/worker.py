@@ -1,15 +1,13 @@
-from pathlib import Path
-
 from .case import Case, CaseMeasurement
 from .clay import run_case
 
 
-def run_case_and_save(args: tuple[Path, Path]) -> CaseMeasurement:
+def run_case_and_save(args: tuple[int, int]) -> CaseMeasurement:
     """Load a case, run it, save the measurement, and return the measurement."""
-    case_file, measurements_path = args
-    case = Case.load_from_file(case_file)
+    case_id, run_id = args
+    case = Case.load_from_db(case_id)
     measurement = run_case(case)
-    measurement.save_to_file(measurements_path)
+    measurement.save_to_db(run_id)
     # Color mapping for scores
     colors = {
         0: "\033[91m",

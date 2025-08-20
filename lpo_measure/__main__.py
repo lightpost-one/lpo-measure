@@ -1,15 +1,17 @@
 import argparse
-import time
+import os
+import sqlite3
+import subprocess
 from datetime import datetime
 from multiprocessing import Pool
 from pathlib import Path
 
-import orjson
 from tqdm import tqdm
 
 from lpo_measure.worker import run_case_and_save
 
 from .case import Case
+from .db import SQLITE_PATH
 
 N_WORKERS = 3
 
@@ -17,13 +19,10 @@ N_WORKERS = 3
 def add_cases_from_file(filepath: str) -> None:
     """Add cases from a plaintext file where each line is an instruction."""
     file_path = Path(filepath)
-    cases_path = Path("cases")
 
     if not file_path.exists():
         print(f"Error: File {filepath} not found")
         return
-
-    cases_path.mkdir(exist_ok=True)
 
     with open(file_path, "r") as f:
         instructions = [line.strip() for line in f if line.strip()]
@@ -32,62 +31,70 @@ def add_cases_from_file(filepath: str) -> None:
 
     for instruction in instructions:
         case = Case.create(instruction)
-        _, created = case.save_to_file(cases_path)
+        _, created = case.save_to_db()
         if created:
             print(f"Created case: {case.hash} - {instruction}")
         else:
             print(f"Case already exists: {case.hash} - {instruction}")
 
 
+def get_git_commit_sha() -> str:
+    """Get the current git commit sha, preferring GITHUB_SHA env var."""
+    github_sha = os.getenv("GITHUB_SHA")
+    if github_sha:
+        return github_sha
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        return result.stdout.strip()
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        return "unknown"
+
+
 def run_all_cases() -> None:
-    """Run measurements against all cases in the cases folder."""
-    cases_path = Path("cases")
+    """Run measurements against all cases in the database."""
     now = datetime.now()
-    measurements_dir_name = f"measurements_{now.strftime('%Y-%m-%d_%H-%M-%S')}"
-    measurements_path = Path(measurements_dir_name)
 
-    if not cases_path.exists():
-        print("No cases directory found")
+    cases = Case.load_all_from_db()
+    num_cases = len(cases)
+
+    if not cases:
+        print("No cases found in the database.")
         return
 
-    case_files = list(cases_path.glob("*.json"))
-    num_cases = len(case_files)
-
-    if not case_files:
-        print("No cases found")
-        return
-
-    measurements_path.mkdir(exist_ok=True)
     print(f"Running {num_cases} cases with {N_WORKERS} workers...")
 
-    total_score = 0
-    start_time = time.time()
+    benchmark_commit_sha = get_git_commit_sha()
+
+    with sqlite3.connect(SQLITE_PATH) as conn:
+        cursor = conn.cursor()
+        # TODO: Get git commit sha
+        cursor.execute(
+            "INSERT INTO runs (timestamp, clay_commit_sha, benchmark_commit_sha) VALUES (?, ?, ?)",
+            (now.isoformat(), "DEV", benchmark_commit_sha),
+        )
+        conn.commit()
+        run_id = cursor.lastrowid
+        assert run_id is not None, "Failed to create run entry"
 
     with Pool(N_WORKERS) as pool:
-        tasks = [(case_file, measurements_path) for case_file in case_files]
-        for measurement in tqdm(
+        tasks = []
+        for case in cases:
+            if case.id is None:
+                raise TypeError(f"Case {case.hash} has no id.")
+            tasks.append((case.id, run_id))
+
+        for _ in tqdm(
             pool.imap(run_case_and_save, tasks),
             total=num_cases,
-            desc="Processing cases",
         ):
-            total_score += measurement.result.score
+            ...
 
-    end_time = time.time()
-    total_runtime = end_time - start_time
-    aggregate_score = total_score / num_cases if num_cases > 0 else 0
-    aggregate_score /= 3.0
-
-    report = {
-        "total_runtime": total_runtime,
-        "aggregate_score": aggregate_score,
-        "num_cases": num_cases,
-    }
-
-    report_path = measurements_path / "report.json"
-    with open(report_path, "wb") as f:
-        f.write(orjson.dumps(report, option=orjson.OPT_INDENT_2))
-
-    print(f"Measurement run complete. Report saved to {report_path}")
+    print("Measurement run complete")
 
 
 if __name__ == "__main__":
