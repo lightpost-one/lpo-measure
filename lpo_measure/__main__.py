@@ -2,8 +2,8 @@ import argparse
 import os
 import sqlite3
 import subprocess
+from concurrent.futures import ProcessPoolExecutor, as_completed
 from datetime import datetime
-from multiprocessing import Pool
 from pathlib import Path
 
 from tqdm import tqdm
@@ -81,18 +81,15 @@ def run_all_cases() -> None:
         run_id = cursor.lastrowid
         assert run_id is not None, "Failed to create run entry"
 
-    with Pool(N_WORKERS) as pool:
-        tasks = []
+    with ProcessPoolExecutor(max_workers=N_WORKERS) as executor:
+        futures = []
         for case in cases:
             if case.id is None:
                 raise TypeError(f"Case {case.hash} has no id.")
-            tasks.append((case.id, run_id))
+            futures.append(executor.submit(run_case_and_save, (case.id, run_id)))
 
-        for _ in tqdm(
-            pool.imap(run_case_and_save, tasks),
-            total=num_cases,
-        ):
-            ...
+        for future in tqdm(as_completed(futures), total=num_cases):
+            future.result()
 
     print("Measurement run complete")
 
