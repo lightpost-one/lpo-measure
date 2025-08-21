@@ -3,3 +3,5 @@
 - [ ] Commit message from clay into run schema, pass as input param
 - [ ] Pricing info. A measurement report should also contain information about the total cost of the measurement, using the litellm api.
 - [ ] Think about how much context the judge sysprompt should have about clay
+- [ ] Build a dashboard using Panel
+- [ ] Compile dashboard to static html + js as shown in https://panel.holoviz.org/how_to/wasm/convert.html, and host in github pages
