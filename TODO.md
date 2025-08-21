@@ -1,4 +1,5 @@
 - [x] Add multiprocessing. We should run N cases in parallel. hardcode N=3 as a global var
 - [x] There is a bug when adding cases. Even new cases report that the file already exists. Verify and fix.
+- [ ] Commit message from clay into run schema, pass as input param
 - [ ] Pricing info. A measurement report should also contain information about the total cost of the measurement, using the litellm api.
 - [ ] Think about how much context the judge sysprompt should have about clay
