@@ -1,0 +1,38 @@
+name: Run Benchmark
+
+on:
+  repository_dispatch:
+    types: [run-benchmark]
+
+jobs:
+  run_benchmark:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install uv
+        run: pip install uv
+
+      - name: Install dependencies
+        run: uv sync --frozen-lock
+
+      - name: Download clay-cli script
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download ${{ github.event.client_payload.release_tag }} \
+            --repo ${{ github.event.client_payload.repository }} \
+            --pattern 'clay-cli.js'
+
+      - name: Run benchmark
+        run: >
+          uv run -m lpo_measure run
+          --script ./clay-cli.js
+          --clay-commit-sha "${{ github.event.client_payload.sha }}"
+          --clay-commit-message "${{ github.event.client_payload.message }}"
