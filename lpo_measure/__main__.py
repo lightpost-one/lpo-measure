@@ -6,6 +6,7 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 from datetime import datetime
 from pathlib import Path
 
+from dotenv import load_dotenv
 from tqdm import tqdm
 
 from lpo_measure.worker import run_case_and_save
@@ -55,7 +56,7 @@ def get_git_commit_sha() -> str:
         return "unknown"
 
 
-def run_all_cases() -> None:
+def run_all_cases(script_path: str) -> None:
     """Run measurements against all cases in the database."""
     now = datetime.now()
 
@@ -86,7 +87,7 @@ def run_all_cases() -> None:
         for case in cases:
             if case.id is None:
                 raise TypeError(f"Case {case.hash} has no id.")
-            futures.append(executor.submit(run_case_and_save, (case.id, run_id)))
+            futures.append(executor.submit(run_case_and_save, (case.id, run_id, script_path)))
 
         for future in tqdm(as_completed(futures), total=num_cases):
             future.result()
@@ -95,6 +96,8 @@ def run_all_cases() -> None:
 
 
 if __name__ == "__main__":
+    load_dotenv()
+    print(f"{os.getenv('CLAY_CLI_PATH')}")
     parser = argparse.ArgumentParser(description="LPO Measure")
     subparsers = parser.add_subparsers(dest="mode", help="Operation mode")
 
@@ -104,12 +107,19 @@ if __name__ == "__main__":
 
     # Run mode
     run_parser = subparsers.add_parser("run", help="Run all cases")
+    run_parser.add_argument(
+        "--script",
+        help="Path to the script file",
+        default=os.getenv("CLAY_CLI_PATH"),
+    )
 
     args = parser.parse_args()
 
     if args.mode == "add":
         add_cases_from_file(args.file)
     elif args.mode == "run":
-        run_all_cases()
+        if not args.script:
+            raise ValueError("Path to script file not provided and CLAY_CLI_PATH not set.")
+        run_all_cases(args.script)
     else:
         raise Exception("Unreachable code.")

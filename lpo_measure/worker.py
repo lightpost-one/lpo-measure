@@ -2,11 +2,11 @@ from .case import Case, CaseMeasurement
 from .clay import run_case
 
 
-def run_case_and_save(args: tuple[int, int]) -> CaseMeasurement:
+def run_case_and_save(args: tuple[int, int, str]) -> CaseMeasurement:
     """Load a case, run it, save the measurement, and return the measurement."""
-    case_id, run_id = args
+    case_id, run_id, script_path = args
     case = Case.load_from_db(case_id)
-    measurement = run_case(case)
+    measurement = run_case(case, script_path)
     measurement.save_to_db(run_id)
     # Color mapping for scores
     colors = {
