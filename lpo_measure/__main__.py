@@ -56,7 +56,7 @@ def get_git_commit_sha() -> str:
         return "unknown"
 
 
-def run_all_cases(script_path: str) -> None:
+def run_all_cases(script_path: str, clay_commit_sha: str, clay_commit_message: str) -> None:
     """Run measurements against all cases in the database."""
     now = datetime.now()
 
@@ -73,10 +73,9 @@ def run_all_cases(script_path: str) -> None:
 
     with sqlite3.connect(SQLITE_PATH) as conn:
         cursor = conn.cursor()
-        # TODO: Get git commit sha
         cursor.execute(
-            "INSERT INTO runs (timestamp, clay_commit_sha, benchmark_commit_sha) VALUES (?, ?, ?)",
-            (now.isoformat(), "DEV", benchmark_commit_sha),
+            "INSERT INTO runs (timestamp, clay_commit_sha, clay_commit_message, benchmark_commit_sha) VALUES (?, ?, ?, ?)",
+            (now.isoformat(), clay_commit_sha, clay_commit_message, benchmark_commit_sha),
         )
         conn.commit()
         run_id = cursor.lastrowid
@@ -112,6 +111,16 @@ if __name__ == "__main__":
         help="Path to the script file",
         default=os.getenv("CLAY_CLI_PATH"),
     )
+    run_parser.add_argument(
+        "--clay-commit-sha",
+        help="Git commit SHA of the clay script",
+        default="DEV",
+    )
+    run_parser.add_argument(
+        "--clay-commit-message",
+        help="Git commit message of the clay script",
+        default="DEV",
+    )
 
     args = parser.parse_args()
 
@@ -120,6 +129,6 @@ if __name__ == "__main__":
     elif args.mode == "run":
         if not args.script:
             raise ValueError("Path to script file not provided and CLAY_CLI_PATH not set.")
-        run_all_cases(args.script)
+        run_all_cases(args.script, args.clay_commit_sha, args.clay_commit_message)
     else:
         raise Exception("Unreachable code.")
