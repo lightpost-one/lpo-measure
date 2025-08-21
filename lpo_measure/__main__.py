@@ -87,7 +87,7 @@ def run_all_cases(script_path: str) -> None:
         for case in cases:
             if case.id is None:
                 raise TypeError(f"Case {case.hash} has no id.")
-            futures.append(executor.submit(run_case_and_save, (case.id, run_id, script_path)))
+            futures.append(executor.submit(run_case_and_save, case.id, run_id, script_path))
 
         for future in tqdm(as_completed(futures), total=num_cases):
             future.result()
