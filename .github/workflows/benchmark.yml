@@ -24,7 +24,7 @@ jobs:
 
       - name: Download clay-cli script
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.CLAY_REPO_TOKEN }}
         run: |
           gh release download ${{ github.event.client_payload.release_tag }} \
             --repo ${{ github.event.client_payload.repository }} \
