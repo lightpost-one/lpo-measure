@@ -9,6 +9,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from tqdm import tqdm
 
+from lpo_measure.run import BenchmarkRun
 from lpo_measure.worker import run_case_and_save
 
 from .case import Case
@@ -56,9 +57,21 @@ def get_git_commit_sha() -> str:
         return "unknown"
 
 
-def run_all_cases(script_path: str, clay_commit_sha: str, clay_commit_message: str) -> None:
+def run_all_cases(
+    script_path: str,
+    clay_commit_sha: str,
+    clay_commit_message: str,
+    model: str,
+) -> None:
     """Run measurements against all cases in the database."""
-    now = datetime.now()
+    run = BenchmarkRun(
+        script_path=script_path,
+        clay_commit_sha=clay_commit_sha,
+        clay_commit_message=clay_commit_message,
+        model=model,
+        timestamp=datetime.now(),
+        benchmark_commit_sha=get_git_commit_sha(),
+    )
 
     cases = Case.load_all_from_db()
     num_cases = len(cases)
@@ -69,24 +82,28 @@ def run_all_cases(script_path: str, clay_commit_sha: str, clay_commit_message: s
 
     print(f"Running {num_cases} cases with {N_WORKERS} workers...")
 
-    benchmark_commit_sha = get_git_commit_sha()
-
     with sqlite3.connect(SQLITE_PATH) as conn:
         cursor = conn.cursor()
         cursor.execute(
-            "INSERT INTO runs (timestamp, clay_commit_sha, clay_commit_message, benchmark_commit_sha) VALUES (?, ?, ?, ?)",
-            (now.isoformat(), clay_commit_sha, clay_commit_message, benchmark_commit_sha),
+            "INSERT INTO runs (timestamp, clay_commit_sha, clay_commit_message, benchmark_commit_sha, model) VALUES (?, ?, ?, ?, ?)",
+            (
+                run.timestamp.isoformat(),
+                run.clay_commit_sha,
+                run.clay_commit_message,
+                run.benchmark_commit_sha,
+                run.model,
+            ),
         )
         conn.commit()
-        run_id = cursor.lastrowid
-        assert run_id is not None, "Failed to create run entry"
+        run.id = cursor.lastrowid
+        assert run.id is not None, "Failed to create run entry"
 
     with ProcessPoolExecutor(max_workers=N_WORKERS) as executor:
         futures = []
         for case in cases:
             if case.id is None:
                 raise TypeError(f"Case {case.hash} has no id.")
-            futures.append(executor.submit(run_case_and_save, case.id, run_id, script_path))
+            futures.append(executor.submit(run_case_and_save, case, run))
 
         for future in tqdm(as_completed(futures), total=num_cases):
             future.result()
@@ -121,6 +138,11 @@ if __name__ == "__main__":
         help="Git commit message of the clay script",
         default="DEV",
     )
+    run_parser.add_argument(
+        "--model",
+        help="Model name to use",
+        default="gpt-5-mini",
+    )
 
     args = parser.parse_args()
 
@@ -129,6 +151,11 @@ if __name__ == "__main__":
     elif args.mode == "run":
         if not args.script:
             raise ValueError("Path to script file not provided and CLAY_CLI_PATH not set.")
-        run_all_cases(args.script, args.clay_commit_sha, args.clay_commit_message)
+        run_all_cases(
+            args.script,
+            args.clay_commit_sha,
+            args.clay_commit_message,
+            args.model,
+        )
     else:
         raise Exception("Unreachable code.")

@@ -26,7 +26,8 @@ with sqlite3.connect(SQLITE_PATH) as conn:
         timestamp TEXT NOT NULL,
         clay_commit_sha TEXT,
         clay_commit_message TEXT,
-        benchmark_commit_sha TEXT
+        benchmark_commit_sha TEXT,
+        model TEXT
     )
     """)
 

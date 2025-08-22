@@ -7,9 +7,10 @@ import orjson
 
 from .case import Case, CaseMeasurement
 from .judge import judge_instruction_achieved
+from .run import BenchmarkRun
 
 
-def run_case(case: Case, script_path: str) -> CaseMeasurement:
+def run_case(case: Case, run: BenchmarkRun) -> CaseMeasurement:
     """Run instruction on canvas and return a CaseResult with the measurement."""
     # Start with clear state
     final_state = None
@@ -20,13 +21,15 @@ def run_case(case: Case, script_path: str) -> CaseMeasurement:
     ):
         cmd = [
             "node",
-            f"{script_path}",
+            f"{run.script_path}",
             "--state",
             state_file.name,
             "--prompt",
             f"'{case.instruction}'",
             "--output",
             output_file.name,
+            "--model-name",
+            run.model,
         ]
         try:
             state_file.write(orjson.dumps(case.initial_state).decode())
@@ -52,4 +55,6 @@ def run_case(case: Case, script_path: str) -> CaseMeasurement:
     end_time = time.time()
     judge_runtime = end_time - start_time
 
-    return CaseMeasurement.create(case, final_state, judge_result, clay_runtime, judge_runtime)
+    return CaseMeasurement.create(
+        case, final_state, judge_result, clay_runtime, judge_runtime
+    )

@@ -1,12 +1,14 @@
 from .case import Case, CaseMeasurement
 from .clay import run_case
+from .run import BenchmarkRun
 
 
-def run_case_and_save(case_id: int, run_id: int, script_path: str) -> CaseMeasurement:
+def run_case_and_save(case: Case, run: BenchmarkRun) -> CaseMeasurement:
     """Load a case, run it, save the measurement, and return the measurement."""
-    case = Case.load_from_db(case_id)
-    measurement = run_case(case, script_path)
-    measurement.save_to_db(run_id)
+    measurement = run_case(case, run)
+    if run.id is None:
+        raise ValueError("BenchmarkRun must have an id to save measurements.")
+    measurement.save_to_db(run.id)
     # Color mapping for scores
     colors = {
         0: "\033[91m",

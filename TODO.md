@@ -2,6 +2,8 @@
 - [x] Add multiprocessing. We should run N cases in parallel. hardcode N=3 as a global var
 - [x] There is a bug when adding cases. Even new cases report that the file already exists. Verify and fix.
 - [x] Commit message from clay into run schema, pass as input param
+- [x] Params in benchmark runner should match params in clay cli. That should also trickle down to the run schema
+- [ ] Use logging instead of prints
 - [ ] Switch on output db, local stuff goes to a dev db, only ci writes runs to prod db.
 - [ ] Finish the ci runner. Runs that are written to prod db are commited to the repo. Make a nice commit message.
 - [ ] Think about how much context the judge sysprompt should have about clay
@@ -12,6 +14,7 @@
 # electron-terminal (clay)
 The following TODOs cannot be solved in this repo, so leave them be. They are related notes for me.
 - [ ] Pass in correct state format for full multi-canvas state
+- [ ] Save and load state in clay UI
 - [ ] Fix ability to run against any commit
 - [ ] CI workflow to do an integration test that does not push to prod db
 - [ ] Correct canvas for initial state, with a chat node present
