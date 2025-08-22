@@ -1,4 +1,5 @@
 import hashlib
+import logging
 import sqlite3
 from dataclasses import dataclass
 from datetime import datetime
@@ -8,62 +9,64 @@ import orjson
 
 from .db import SQLITE_PATH
 
+logging.basicConfig(level=logging.INFO, format="%(message)s")
+
 
 @dataclass
 class Case:
     """A Case is a user instruction on top of an initial state."""
 
+    id: int
     hash: str
     instruction: str
     initial_state: dict[str, Any]
-    id: int | None = None
 
     @classmethod
-    def create(cls, instruction: str, initial_state: dict[str, Any] | None = None) -> "Case":
-        """Create a new case with hash from instruction and current timestamp."""
+    def get_or_create(cls, instruction: str, initial_state: dict[str, Any] | None = None) -> "Case":
+        """
+        Get a case from the database if it exists, otherwise create it.
+        Ensures that a Case object always has an ID and corresponds to a db row.
+        """
         if initial_state is None:
             initial_state = {"nodes": [], "edges": []}
 
         to_hash = instruction.encode() + orjson.dumps(initial_state, option=orjson.OPT_SORT_KEYS)
-
         instruction_hash = hashlib.sha256(to_hash).hexdigest()[:16]
-        return cls(
-            hash=instruction_hash,
-            instruction=instruction,
-            initial_state=initial_state,
-        )
 
-    def save_to_db(self) -> tuple[int, bool]:
-        """Save case to the database if it doesn't already exist."""
         with sqlite3.connect(SQLITE_PATH) as conn:
             cursor = conn.cursor()
-            try:
-                cursor.execute(
-                    """
-                    INSERT INTO cases (hash, instruction, initial_state)
-                    VALUES (?, ?, ?)
-                    """,
-                    (
-                        self.hash,
-                        self.instruction,
-                        orjson.dumps(self.initial_state).decode(),
-                    ),
-                )
-                conn.commit()
-                self.id = cursor.lastrowid
-                if self.id is None:
-                    raise TypeError("Failed to get last row id.")
-                return self.id, True
-            except sqlite3.IntegrityError:
-                # Case with this hash already exists
-                cursor.execute("SELECT id FROM cases WHERE hash = ?", (self.hash,))
-                row = cursor.fetchone()
-                if row is None:
-                    raise TypeError("Failed to fetch existing case.")
-                self.id = row[0]
-                if self.id is None:
-                    raise TypeError("Failed to get last row id.")
-                return self.id, False
+
+            # Try to find existing case
+            cursor.execute("SELECT id FROM cases WHERE hash = ?", (instruction_hash,))
+            row = cursor.fetchone()
+            if row:
+                case_id = row[0]
+                logging.info(f"Case already exists: {instruction_hash} - {instruction}")
+                return cls.load_from_db(case_id)
+
+            # If not found, create it
+            cursor.execute(
+                """
+                INSERT INTO cases (hash, instruction, initial_state)
+                VALUES (?, ?, ?)
+                """,
+                (
+                    instruction_hash,
+                    instruction,
+                    orjson.dumps(initial_state).decode(),
+                ),
+            )
+            conn.commit()
+            case_id = cursor.lastrowid
+            if case_id is None:
+                raise TypeError("Failed to get last row id after insert.")
+            logging.info(f"Created case: {instruction_hash} - {instruction}")
+            return cls(
+                id=case_id,
+                hash=instruction_hash,
+                instruction=instruction,
+                initial_state=initial_state,
+            )
 
     @classmethod
     def load_from_db(cls, case_id: int) -> "Case":

@@ -32,12 +32,7 @@ def add_cases_from_file(filepath: str) -> None:
     print(f"Creating {len(instructions)} cases from {filepath}")
 
     for instruction in instructions:
-        case = Case.create(instruction)
-        _, created = case.save_to_db()
-        if created:
-            print(f"Created case: {case.hash} - {instruction}")
-        else:
-            print(f"Case already exists: {case.hash} - {instruction}")
+        Case.get_or_create(instruction)
 
 
 def get_git_commit_sha() -> str:
@@ -101,8 +96,6 @@ def run_all_cases(
     with ProcessPoolExecutor(max_workers=N_WORKERS) as executor:
         futures = []
         for case in cases:
-            if case.id is None:
-                raise TypeError(f"Case {case.hash} has no id.")
             futures.append(executor.submit(run_case_and_save, case, run))
 
         for future in tqdm(as_completed(futures), total=num_cases):
