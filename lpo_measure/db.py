@@ -1,8 +1,20 @@
 import sqlite3
+import os
+import sqlite3
 from pathlib import Path
 
 # repo root
-SQLITE_PATH = Path(__file__).parent.parent / "prod-measurements.db"
+_PROD_SQLITE_PATH = Path(__file__).parent.parent / "prod-measurements.db"
+_DEV_SQLITE_PATH = Path(__file__).parent.parent / "dev-measurements.db"
+
+
+def get_db_path() -> Path:
+    if os.environ.get("CI"):
+        return _PROD_SQLITE_PATH
+    return _DEV_SQLITE_PATH
+
+
+SQLITE_PATH = get_db_path()
 
 SQLITE_PATH.parent.mkdir(parents=True, exist_ok=True)
 
