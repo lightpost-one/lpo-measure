@@ -1,4 +1,4 @@
-.PHONY: venv run add-cases-prod
+.PHONY: venv run add-cases-prod jupyter-vim
 
 venv:
 	@echo "Setting up virtual environment..."
@@ -16,3 +16,9 @@ add-cases-prod:
 	fi
 	@echo "Adding cases from $(FILE) to production database..."
 	@CI=true uv run -m lpo_measure add $(FILE)
+
+jupyter-vim: venv
+	@echo "Installing jupyterlab with vim bindings..."
+	@uv pip install jupyterlab jupyterlab-vim
+	@echo "Starting jupyterlab..."
+	@uv run jupyter lab
