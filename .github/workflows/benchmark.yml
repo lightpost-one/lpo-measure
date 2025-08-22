@@ -36,3 +36,16 @@ jobs:
           --script ./clay-cli.js
           --clay-commit-sha "${{ github.event.client_payload.sha }}"
           --clay-commit-message "${{ github.event.client_payload.message }}"
+
+      - name: Configure Git
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+      
+      - name: Commit and push changes
+        run: |
+          git add prod-measurements.db
+          git commit -m "Update measurements from clay commit: ${{ github.event.client_payload.sha }}
+          
+          ${{ github.event.client_payload.message }}"
+          git push origin main

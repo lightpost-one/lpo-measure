@@ -5,7 +5,7 @@
 - [x] Params in benchmark runner should match params in clay cli. That should also trickle down to the run schema
 - [x] Use logging instead of prints
 - [x] Switch on output db, local stuff goes to a dev db, only ci writes runs to prod db. If I make run, the prod db should not be touched. This should be a clean switch.
-- [ ] Finish the ci runner. Runs that are written to prod db are commited to the repo. Make a nice commit message.
+- [x] Finish the ci runner. Runs that are written to prod db are commited to the repo. Make a nice commit message.
 - [ ] Think about how much context the judge sysprompt should have about clay
 - [ ] Build a dashboard using Panel
 - [ ] Compile dashboard to static html + js as shown in https://panel.holoviz.org/how_to/wasm/convert.html, and host in github pages
