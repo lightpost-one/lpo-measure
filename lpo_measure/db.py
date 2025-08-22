@@ -1,4 +1,3 @@
-import sqlite3
 import os
 import sqlite3
 from pathlib import Path
@@ -27,7 +26,7 @@ with sqlite3.connect(SQLITE_PATH) as conn:
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         hash TEXT NOT NULL UNIQUE,
         instruction TEXT NOT NULL,
-        initial_state TEXT
+        initial_state TEXT NOT NULL
     )
     """)
 
@@ -36,10 +35,10 @@ with sqlite3.connect(SQLITE_PATH) as conn:
     CREATE TABLE IF NOT EXISTS runs (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         timestamp TEXT NOT NULL,
-        clay_commit_sha TEXT,
-        clay_commit_message TEXT,
-        benchmark_commit_sha TEXT,
-        model TEXT
+        clay_commit_sha TEXT NOT NULL,
+        clay_commit_message TEXT NOT NULL,
+        benchmark_commit_sha TEXT NOT NULL,
+        model TEXT NOT NULL
     )
     """)
 
@@ -49,11 +48,11 @@ with sqlite3.connect(SQLITE_PATH) as conn:
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         run_id INTEGER NOT NULL,
         case_id INTEGER NOT NULL,
-        final_state TEXT,
+        final_state TEXT NOT NULL,
         score INTEGER NOT NULL,
-        reason TEXT,
-        clay_runtime_seconds REAL,
-        judge_runtime_seconds REAL,
+        reason TEXT NOT NULL,
+        clay_runtime_seconds REAL NOT NULL,
+        judge_runtime_seconds REAL NOT NULL,
         FOREIGN KEY (run_id) REFERENCES runs (id),
         FOREIGN KEY (case_id) REFERENCES cases (id)
     )

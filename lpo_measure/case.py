@@ -153,7 +153,7 @@ class CaseMeasurement:
                 (
                     run_id,
                     self.case.id,
-                    orjson.dumps(self.final_state).decode() if self.final_state else None,
+                    orjson.dumps(self.final_state).decode() if self.final_state else "{}",
                     self.result.score,
                     self.result.reason,
                     self.clay_runtime,
