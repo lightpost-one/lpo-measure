@@ -6,7 +6,7 @@
 # %%
 import sqlite3
 import pandas as pd
-import matplotlib.pyplot as plt
+import plotly.express as px
 from pprint import pprint
 
 SQLITE_PATH = "dev-measurements.db"
@@ -37,15 +37,15 @@ df_agg = df_merged.groupby("clay_commit_sha")["score"].mean().reset_index()
 df_agg
 
 # %%
-plt.figure(figsize=(10, 6))
-plt.bar(df_agg["clay_commit_sha"], df_agg["score"])
-plt.xlabel("Clay Commit SHA")
-plt.ylabel("Average Score")
-plt.title("Average Score per Clay Commit (Matplotlib)")
-plt.xticks(rotation=45, ha="right")
-plt.ylim(0, df_agg['score'].max() * 1.1)
-plt.tight_layout()
-plt.show()
+fig = px.bar(
+    df_agg,
+    x="clay_commit_sha",
+    y="score",
+    title="Average Score per Clay Commit (Plotly)",
+    labels={"clay_commit_sha": "Clay Commit SHA", "score": "Average Score"},
+    height=600,
+)
+fig.show()
 
 # %% [markdown]
 # ## Explore a Single Case
