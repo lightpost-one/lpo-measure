@@ -4,7 +4,6 @@ version = "0.1.0"
 requires-python = ">=3.13"
 dependencies = [
     "litellm>=1.75.8",
-    "matplotlib>=3.10.5",
     "numpy>=2.3.2",
     "orjson>=3.11.2",
     "pandas>=2.3.1",
@@ -13,4 +12,9 @@ dependencies = [
 ]
 
 [dependency-groups]
-dev = ["pyright>=1.1.403"]
+dev = [
+    "jupyter>=1.1.1",
+    "matplotlib>=3.10.5",
+    "notebook>=7.4.5",
+    "pyright>=1.1.403",
+]
