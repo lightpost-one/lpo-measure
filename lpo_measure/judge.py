@@ -7,6 +7,12 @@ from dotenv import load_dotenv
 
 from .case import CaseResult
 
+litellm.set_verbose = False  # type: ignore
+logging.getLogger("LiteLLM").setLevel(logging.WARNING)
+logging.getLogger("LiteLLM Router").setLevel(logging.WARNING)
+logging.getLogger("LiteLLM Proxy").setLevel(logging.WARNING)
+
+
 load_dotenv()
 
 litellm.api_base = "https://app.lyngby.lightpost.one/"
