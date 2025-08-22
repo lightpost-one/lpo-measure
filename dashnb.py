@@ -10,7 +10,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from pprint import pprint
 
-SQLITE_PATH = "dev-measurements.db"
+SQLITE_PATH = "prod-measurements.db"
 
 # %%
 conn = sqlite3.connect(SQLITE_PATH)
