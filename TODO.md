@@ -3,8 +3,8 @@
 - [x] There is a bug when adding cases. Even new cases report that the file already exists. Verify and fix.
 - [x] Commit message from clay into run schema, pass as input param
 - [x] Params in benchmark runner should match params in clay cli. That should also trickle down to the run schema
-- [ ] Use logging instead of prints
-- [ ] Switch on output db, local stuff goes to a dev db, only ci writes runs to prod db.
+- [x] Use logging instead of prints
+- [ ] Switch on output db, local stuff goes to a dev db, only ci writes runs to prod db. If I make run, the prod db should not be touched. This should be a clean switch.
 - [ ] Finish the ci runner. Runs that are written to prod db are commited to the repo. Make a nice commit message.
 - [ ] Think about how much context the judge sysprompt should have about clay
 - [ ] Build a dashboard using Panel

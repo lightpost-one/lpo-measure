@@ -9,7 +9,7 @@ import orjson
 
 from .db import SQLITE_PATH
 
-logging.basicConfig(level=logging.INFO, format="%(message)s")
+logger = logging.getLogger(__name__)
 
 
 @dataclass

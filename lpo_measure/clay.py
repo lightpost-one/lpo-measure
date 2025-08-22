@@ -1,5 +1,5 @@
+import logging
 import subprocess
-import sys
 import tempfile
 import time
 
@@ -8,6 +8,8 @@ import orjson
 from .case import Case, CaseMeasurement
 from .judge import judge_instruction_achieved
 from .run import BenchmarkRun
+
+logger = logging.getLogger(__name__)
 
 
 def run_case(case: Case, run: BenchmarkRun) -> CaseMeasurement:
@@ -48,13 +50,11 @@ def run_case(case: Case, run: BenchmarkRun) -> CaseMeasurement:
             if output:
                 final_state = orjson.loads(output)
         except Exception:
-            print(f'\nError from calling "{" ".join(cmd)}"\n', file=sys.stderr)
+            logger.error(f'\nError from calling "{" ".join(cmd)}"\n')
 
     start_time = time.time()
     judge_result = judge_instruction_achieved(case.instruction, final_state)
     end_time = time.time()
     judge_runtime = end_time - start_time
 
-    return CaseMeasurement.create(
-        case, final_state, judge_result, clay_runtime, judge_runtime
-    )
+    return CaseMeasurement.create(case, final_state, judge_result, clay_runtime, judge_runtime)

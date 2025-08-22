@@ -1,4 +1,5 @@
 import argparse
+import logging
 import os
 import sqlite3
 import subprocess
@@ -14,6 +15,7 @@ from lpo_measure.worker import run_case_and_save
 
 from .case import Case
 from .db import SQLITE_PATH
+from .log import setup_logging
 
 N_WORKERS = 3
 
@@ -23,13 +25,13 @@ def add_cases_from_file(filepath: str) -> None:
     file_path = Path(filepath)
 
     if not file_path.exists():
-        print(f"Error: File {filepath} not found")
+        logging.error(f"Error: File {filepath} not found")
         return
 
     with open(file_path, "r") as f:
         instructions = [line.strip() for line in f if line.strip()]
 
-    print(f"Creating {len(instructions)} cases from {filepath}")
+    logging.info(f"Creating {len(instructions)} cases from {filepath}")
 
     for instruction in instructions:
         Case.get_or_create(instruction)
@@ -72,10 +74,10 @@ def run_all_cases(
     num_cases = len(cases)
 
     if not cases:
-        print("No cases found in the database.")
+        logging.info("No cases found in the database.")
         return
 
-    print(f"Running {num_cases} cases with {N_WORKERS} workers...")
+    logging.info(f"Running {num_cases} cases with {N_WORKERS} workers...")
 
     with sqlite3.connect(SQLITE_PATH) as conn:
         cursor = conn.cursor()
@@ -93,7 +95,7 @@ def run_all_cases(
         run.id = cursor.lastrowid
         assert run.id is not None, "Failed to create run entry"
 
-    with ProcessPoolExecutor(max_workers=N_WORKERS) as executor:
+    with ProcessPoolExecutor(max_workers=N_WORKERS, initializer=setup_logging) as executor:
         futures = []
         for case in cases:
             futures.append(executor.submit(run_case_and_save, case, run))
@@ -101,12 +103,12 @@ def run_all_cases(
         for future in tqdm(as_completed(futures), total=num_cases):
             future.result()
 
-    print("Measurement run complete")
+    logging.info("Measurement run complete")
 
 
 if __name__ == "__main__":
+    setup_logging()
     load_dotenv()
-    print(f"{os.getenv('CLAY_CLI_PATH')}")
     parser = argparse.ArgumentParser(description="LPO Measure")
     subparsers = parser.add_subparsers(dest="mode", help="Operation mode")
 

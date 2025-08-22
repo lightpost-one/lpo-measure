@@ -1,6 +1,10 @@
+import logging
+
 from .case import Case, CaseMeasurement
 from .clay import run_case
 from .run import BenchmarkRun
+
+logger = logging.getLogger(__name__)
 
 
 def run_case_and_save(case: Case, run: BenchmarkRun) -> CaseMeasurement:
@@ -20,7 +24,7 @@ def run_case_and_save(case: Case, run: BenchmarkRun) -> CaseMeasurement:
     bold = "\033[1m"
 
     score_color = colors.get(measurement.result.score, "")
-    print(
+    logger.info(
         f"✨ Instruction '{bold}{case.instruction}{reset_color}' scored {bold}{score_color}{measurement.result.score}{reset_color} because '{measurement.result.reason}'\n"
     )
     return measurement

@@ -1,3 +1,4 @@
+import logging
 from typing import Any
 
 import litellm
@@ -10,6 +11,8 @@ load_dotenv()
 
 litellm.api_base = "https://app.lyngby.lightpost.one/"
 litellm.api_key = "9e571bf73904"
+
+logger = logging.getLogger(__name__)
 
 
 def judge_instruction_achieved(instruction: str, final_state: dict[str, Any] | None) -> CaseResult:
@@ -51,5 +54,5 @@ Final canvas state:
         assert content is not None
         return CaseResult(**orjson.loads(content))
     except Exception as e:
-        print(f"LLM judge error: {e}")
+        logger.error(f"LLM judge error: {e}")
         return CaseResult(score=0, reason=f"Error during evaluation: {e}")
